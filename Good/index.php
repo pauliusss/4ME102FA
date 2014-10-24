@@ -27,16 +27,15 @@ require CONF_FILE;
  */
 require OPAUTH_LIB_DIR.'Opauth.php';
 $Opauth = new Opauth( $config );
-?>
-<html>
-<body>
-	<p>Please log in:</p>
+
+
+	$body = "<p>Please log in:</p>
 	<ul>
-		<li><a href="./facebook">Student login (Facebook)</a></li>
-		<li><a href="./google">Teacher login (Google)</a></li>
-		<li><a href="./twitter">Administrator login (Twitter)</a></li>
-		
-		<?php include("./code/analytics.php"); ?>
-	</ul>
-</body>
-</html>
+		<li><a href=\"./facebook\">Student login (Facebook)</a></li>
+		<li><a href=\"./google\">Teacher login (Google)</a></li>
+		<li><a href=\"./twitter\">Administrator login (Twitter)</a></li>
+	</ul>";
+	
+	include("./JuxtaLearn/html.php");
+	
+?>
