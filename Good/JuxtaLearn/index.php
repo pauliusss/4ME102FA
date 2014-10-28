@@ -69,6 +69,9 @@ $body .= ">Topic</option>";
 $body .= "<option value=\"Title\"";
 if ($_GET["SearchIn"] == "Title") $body .= " selected=\"selected\"";
 $body .= ">Title</option>";
+$body .= "<option value=\"Subject\"";
+if ($_GET["SearchIn"] == "Subject") $body .= " selected=\"selected\"";
+$body .= ">Subject</option>";
 
 $body .= "</select>";
 $body .= "<input type=\"submit\" value=\"Filter\"/>";
@@ -84,6 +87,8 @@ $body .= "<input type=\"checkbox\" name=\"videos\" value=\"vid\" checked=\"check
 $body .= "<input type=\"checkbox\" name=\"users\" value=\"usr\" checked=\"checked\" onclick=\"swap($('#divUsers'));\">Show users<br/>";
 $body .= "</form>";*/
 
+$body .= "<input type=\"checkbox\" name=\"images\" value=\"img\" onclick=\"swapParent();\">Raw view - show only last version of every image<br/>";
+
 $body .= "<hr/>";
 
 require_once("lib/httpful/httpful.phar");
@@ -91,7 +96,7 @@ require_once("JuxtaClient.php");
 
 $juxtclient = new JuxtaPHP();
 
-$images = $juxtclient->getImages();
+$images = $copyOfImages = $juxtclient->getImages();
 
 
 $body .= "<div id=\"accordion\">";
@@ -100,7 +105,7 @@ $body .= "<div id=\"accordion\">";
   {
   $body .= "<div class=\"group\">
     <h3>USERS</h3>
-
+	<div>This part is not implemented (for design purposes only)...</div>
   </div>";
   }
 
@@ -119,32 +124,99 @@ foreach ($images->body as $image)
 		($queryText == "") ||
 		(($queryIn == "Topic" && strpos(strtolower($image->topic), strtolower($queryText)) !== false) ||
 		($queryIn == "Description" && strpos(strtolower($image->description), strtolower($queryText)) !== false) ||
+		($queryIn == "Subject" && strpos(strtolower($image->subject), strtolower($queryText)) !== false) ||
 		($queryIn == "Title" && strpos(strtolower($image->title), strtolower($queryText)) !== false))
 	)
 	{
 		$countVisible ++;
+		
+		$isParent = false;
+		foreach ($copyOfImages->body as $copyImage)
+		{
+			if ($image->_id == $copyImage->parentImageId)
+			{
+				$isParent = true;
+			}
+		}		
+		
 		if ($image->parentImageId != "")
 		{
-			$parentImage = $images = $juxtclient->getImageById($image->parentImageId);
+			$parentImage = $juxtclient->getImageById($image->parentImageId);
 		}
 		else
 		{
 			$parentImage = "";
 		}
+		
+		if ($isParent)
+		{
+			$body .= "<span id=\"parent\">";
+		}
+		
 		$body .=  "<table><tr>";
-		$body .=  "<td><img height=\"250\" src=\"$image->url\" alt=\"$image->title\"/><br/></td>";
+		$body .=  "<td><img height=\"300\" src=\"$image->url\" alt=\"$image->title\"/><br/></td>";
 		$body .=  "<td style=\"valign:top;\"><table>";
 		$body .=  "<tr><td>#$countImg</td></tr>";
 		$body .=  "<tr><td>Description: $image->description</td></tr>";
 		$body .=  "<tr><td>Topic: $image->topic</td></tr>";
 		$body .=  "<tr><td>Title: $image->title</td></tr>";
+		$body .=  "<tr><td>Subject: $image->subject</td></tr>";
 		$body .=  "<tr><td>Created: $image->creationDate</td></tr>";
+		$body .=  "<tr><td>Id: $image->_id</td></tr>";
+		
+		
+		
 		if ($parentImage != "")
 		{
-			$body .=  "<tr><td>Parent (". $parentImage->body->title . " / " . $parentImage->body->topic . " / " . $parentImage->body->description . ")</td></tr>";
-			$body .=  "<tr><td><img height=\"50\" src=\"" . $parentImage->body->url . "\" alt=\"" . $parentImage->body->title . "\" /></td></tr>";
-		} 
-		$pixlrString = "{image:'$image->url', title:'$image->title', method:'GET', service:'editor', target:'http://www.paulius.nl/4ME102FA/JuxtaLearn/lib/pixlr/Save.php', exit:'http://www.paulius.nl/4ME102FA/JuxtaLearn/lib/pixlr/Save.php', redirect:'true', locktarget:'true'}";
+			$body .= "<tr><td>";
+			$body .= "<div id=\"accordionHistory" . $countImg. "\">";
+			$body .= "<div class=\"group\">
+			<h3>Show history</h3>
+			<div>";
+			$cycleCount = 0;
+			//while ($parentImage != "")
+			//{
+				$purl = $parentImage->body->url;
+				$ptitle = $parentImage->body->title;
+				$pdesc = $parentImage->body->description;
+				$pcreated = $parentImage->body->creationDate;
+				$ptopic = $parentImage->body->topic;
+				$psubject = $parentImage->body->subject;
+				
+				$body .=  "<table><tr><td><img height=\"200\" src=\"$purl\" alt=\"$ptitle\"/><br/></td></tr>";
+				$body .=  "<tr><td>Description: $pdesc</td></tr>";
+				$body .=  "<tr><td>Topic: $ptopic</td></tr>";
+				$body .=  "<tr><td>Title: $ptitle</td></tr>";
+				$body .=  "<tr><td>Subject: $psubject</td></tr>";
+				$body .=  "<tr><td>Created: $pcreated</td></tr></table><br/>";
+				
+				//Parent (". $parentImage->body->title . " / " . $parentImage->body->topic . " / " . $parentImage->body->description . ")
+				
+				//$body .=  "<tr><td><img height=\"50\" src=\"" . $parentImage->body->url . "\" alt=\"" . $parentImage->body->title . "\" /></td></tr></table>";
+				//$body .= "<tr><td><a href=\"history.php?id=$image->_id\" onClick=\"alert('This is not implemented yet!')\">View history</a></td></tr>";
+				if ($cycleCount < 5)
+				{
+					$parentImage = $juxtclient->getImageById($parentImage->body->parentImageId);
+					$cycleCount ++;
+				}
+				else
+				{
+					$parentImage = "";
+				}
+				// if error then $parentImage = "";
+			//}
+			$body .= "</div></div>";
+			
+			$body .= "</div>";
+			$body .= "</tr></td>";
+			
+		}
+		/*else
+		{
+			$body .= "<tr><td>This image doesn't have any history.</td></tr>";
+		}*/
+		$var = "?title=$image->title&topic=$image->topic&id=$image->_id&subject=$image->subject&description=$image->description";
+		$pixlrString = "{image:'$image->url', title:'$image->title', method:'GET', service:'editor', target:'http://www.paulius.nl/4ME102FA/JuxtaLearn/lib/pixlr/Save.php" . $var ."', exit:'http://www.paulius.nl/4ME102FA/JuxtaLearn/lib/pixlr/Save.php', redirect:'true', locktarget:'true'}";
 		//image: _elmImage.src,
 			//title: "pixlr editor",
 			//method: "GET",
@@ -152,15 +224,28 @@ foreach ($images->body as $image)
 			//exit: URL_SAVE_IMAGE,
 			//redirect: "true",
 			//locktarget: "true",
-		$body .=  "<tr><td><a href=\"javascript:pixlr.overlay.show($pixlrString);\" onClick=\"\">";
-		if ($role == "Teacher" || $role == "Administrator")
+		
+		if ($role == "Teacher" || $role == "Administrator" )
 		{
-			$body .= "Edit image</a></td></tr>";
-			$body .= "<tr><td><a href=\"#\" onClick=\"alert('This is not implemented yet!')\">Edit annotation</a></td></tr>";
-			$body .= "<tr><td><a href=\"#\" onClick=\"alert('This is not implemented yet!')\">Delete</a></td></tr>";
+			if (!$isParent)
+			{
+				$body .=  "<tr><td><a href=\"javascript:pixlr.overlay.show($pixlrString);\" onClick=\"\">";
+				$body .= "Edit image</a></td></tr>";
+				$body .= "<tr><td><a id=\"annotate-image" . $countImg . "\" href=\"#\" onClick=\"StoreCurrent('$image->_id', '$image->title', '$image->description', '$image->topic', '$image->subject'); FillImageAnnotationDialog('$image->_id', '$image->title', '$image->description', '$image->topic', '$image->subject', '$image->url', 'edit', '$role');\">Edit annotation</a></td></tr>";
+				$body .= "<tr><td><a href=\"delete.php?id=$image->_id\">Delete</a></td></tr>";
+			}
+			else
+			{
+				$body .= "<tr><td>You cannot edit/delete/annotate this picture as it has child(ren).</td></tr>";
+			}
 		}
 		$body .=  "</table></td>";
 		$body .=  "</tr></table><br/>";
+		
+		if ($isParent)
+		{
+			$body .= "</span>";
+		}
 	}
 }
 if ($countVisible == 0)
@@ -173,6 +258,11 @@ if ($countVisible == 0)
   <div class=\"group\">
     <h3>VIDEOS</h3>
 	<div>";
+	
+	
+	include ("./edit.php");
+	
+	
 $videos = $juxtclient->getVideos();
 $countVid = 0;
 foreach ($videos->body as $video)
@@ -196,8 +286,8 @@ foreach ($videos->body as $video)
 	$body .=  "<tr><td>Created: $video->creationDate</td></tr>";
 	if ($role == "Teacher" || $role == "Administrator")
 	{
-		$body .=  "<tr><td><a href=\"#\" onClick=\"alert('This is not implemented!')\">Annotate video</a></td></tr>";
-		$body .=  "<tr><td><a href=\"#\" onClick=\"alert('This is not implemented!')\">Delete</a></td></tr>";
+		$body .=  "<tr><td><a href=\"#\" onClick=\"alert('This part is not implemented (for design purposes only)...')\">Annotate video</a></td></tr>";
+		$body .=  "<tr><td><a href=\"#\" onClick=\"alert('This part is not implemented (for design purposes only)...')\">Delete</a></td></tr>";
 	}
 	$body .=  "</table></td>";
 	$body .=  "</tr></table><br/>";
@@ -213,7 +303,7 @@ if ($countVid == 0)
   if ($role == "Teacher")
   {
 	  $body .= "<div class=\"group\">
-					<h3>TARGET GROUPS</h3>";
+					<h3>TARGET GROUPS</h3><div>This part is not implemented (for design purposes only)...</div>";
 
 	  $body .= "</div>";
   }
@@ -320,6 +410,9 @@ $body .= ("</span></td></tr></tbody></table>");
 
 $body .= "<div id=\"dialog-confirm\" title=\"Delete image?\"><p><span class=\"ui-icon ui-icon-alert\" style=\"float:left; margin:0 7px 20px 0;\"></span>The image will be permanently deleted and cannot be recovered. Are you sure?</p></div>";
 */
+
+
+//$body .= print_r($juxtclient->getImages(), true);
 
 include("html.php");
 
