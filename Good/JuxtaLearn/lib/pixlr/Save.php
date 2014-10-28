@@ -43,11 +43,11 @@ class Save {
 		$url = "http://www.paulius.nl/4ME102FA/JuxtaLearn/savenew.php?";
 		
 		$url = $url . "action=add";
-		$url = $url + "&id=" . $_GET['id'];
-		$url = $url + "&topic=" . $_GET['topic'];
+		$url = $url . "&id=" . $_GET['id'];
+		$url = $url . "&topic=" . $_GET['topic'];
 		$url = $url . "&title=" . $_GET['title'];
 		$url = $url . "&subject=" . $_GET['subject'];
-		$url = $url + "&desc=" + $_GET['description']; //+ " (edited by: " + role.val() + ")";
+		$url = $url . "&desc=" . $_GET['description']; //+ " (edited by: " + role.val() + ")";
 		$url = $url . "&type=annotation";
 		$url = $url . "&url=http://www.paulius.nl/4ME102FA/JuxtaLearn/lib/pixlr/img/" . $count . ".jpg";
 	

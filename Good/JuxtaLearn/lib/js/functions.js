@@ -5,9 +5,13 @@ function swap(element)
 
 function swapParent()
 {
-	$("#parent").each(function(index, element) {
-		$(element).toggle();
-	});
+	//$("#parent").each(function(index, element) {
+	//	$(this).toggle();
+	//});
+	
+	$("[id^=parent]").each(function(){
+	$(this).toggle();
+		});
 };
 
 function clearFilter()
@@ -27,11 +31,7 @@ function clearFilter()
 		$("#imgId").val(id);
 		$("#role").val(role);
 	};
-	
-	function StoreCurrent(id, title, $image->description, $image->topic, $image->subject)
-	{
-	
-	};
+
 
   $(function() {
     $( "#dialog-confirm" ).dialog({

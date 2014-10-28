@@ -150,7 +150,7 @@ foreach ($images->body as $image)
 		
 		if ($isParent)
 		{
-			$body .= "<span id=\"parent\">";
+			$body .= "<span id=\"parent" . $countImg . "\">";
 		}
 		
 		$body .=  "<table><tr>";
